@@ -49,3 +49,64 @@ h1:focus {
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }
+
+.sudoku-container {
+    margin: 20px 0;
+}
+
+.sudoku-grid {
+    border-collapse: collapse;
+    margin: auto;
+}
+
+.sudoku-grid td {
+    width: 45px;
+    height: 45px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 22px;
+    border: 1px solid #999;
+    cursor: pointer;
+}
+
+.sudoku-grid td.given {
+    background-color: #e8e8e8;
+    font-weight: bold;
+}
+
+.sudoku-grid td.selected {
+    background-color: #cfe3ff;
+}
+.sudoku-grid td.top-border {
+    border-top: 3px solid black;
+}
+
+.sudoku-grid td.left-border {
+    border-left: 3px solid black;
+}
+
+.placeholder {
+    color: #bbb;
+}
+
+.controls {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.controls button {
+    margin: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+.number-pad button {
+    margin: 5px;
+    padding: 10px 15px;
+    font-size: 18px;
+}
+
+.clear-btn {
+    background-color: #ffdddd;
+}
+

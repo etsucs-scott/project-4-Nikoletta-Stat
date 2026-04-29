@@ -32,7 +32,7 @@ public class Board
             int v = board[row, c].value;
             if (v == 0)
                 continue;
-            if (!seen.Add(c))
+            if (!seen.Add(v))
                 return false;
         }
         return true;
@@ -46,7 +46,7 @@ public class Board
             int v = board[r, col].value;
             if (v == 0)
                 continue;
-            if (!seen.Add(r))
+            if (!seen.Add(v))
                 return false;
         }
         return true;
@@ -64,7 +64,7 @@ public class Board
             {
                 int v = board[r, c].value;
                 if (v == 0) continue;
-                if (!seen.Add(c)) return false;
+                if (!seen.Add(v)) return false;
             }
         }
         return true;

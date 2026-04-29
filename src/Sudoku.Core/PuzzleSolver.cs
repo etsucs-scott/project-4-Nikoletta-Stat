@@ -47,9 +47,9 @@ namespace Sudoku.Core
             for (int i = 1; i <= 9; i++)
             {
                 SudokuBoard.board[row, col].value = i;
-                if (SudokuBoard.ValidRow(row) && 
+                if (SudokuBoard.ValidRow(row) &&
                     SudokuBoard.ValidCol(col) &&
-                    SudokuBoard.ValidBox(row / 3, col % 3))
+                    SudokuBoard.ValidBox(row / 3, col / 3))
                 {
                     solutionCount += Solutions(SudokuBoard);
                     if (solutionCount >= 2)

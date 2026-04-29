@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 
 namespace Sudoku.Core
 {
+    public enum DifficultyLevel
+    {
+        Easy,
+        Medium,
+        Hard
+    }
     public class PuzzleGenerator
     {
         private readonly PuzzleSolver solver = new PuzzleSolver();
         Random rand = new Random();
-
-        public enum DifficultyLevel
-        {
-            Easy,
-            Medium,
-            Hard
-        }
 
         public Board GenerateNewPuzzle(DifficultyLevel level)
         {
@@ -54,13 +53,23 @@ namespace Sudoku.Core
             }
 
             solver.Solved(board);
+
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    if (board.board[r, c] == null)
+                        board.board[r, c] = new Cell();
+                }
+            }
+
             return board;
         }
 
         private void RemoveValues(Board board, int numGiven)
         {
-            var boxPositions = Enumerable.Range(0, 81);
-            Shuffle(boxPositions.ToList());
+            var boxPositions = Enumerable.Range(0, 81).ToList();
+            Shuffle(boxPositions);
 
             int removed = 0;
             int removing = 81 - numGiven;
@@ -79,14 +88,24 @@ namespace Sudoku.Core
                 if (solver.Solutions(board) != 1)
                 {
                     board.board[r, c].value = cellValue;
+                    board.board[r, c].given = true;
                 }
                 else
                 {
-                    board.board[r, c].given = true;
+                    board.board[r, c].given = false;
                     removed++;
                 }
+            }
 
-
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    if (board.board[r, c].value != 0)
+                        board.board[r, c].given = true;
+                    else
+                        board.board[r, c].given = false;
+                }
             }
         }
 

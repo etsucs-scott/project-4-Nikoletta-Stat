@@ -1,0 +1,157 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using Sudoku.Core;
+
+
+<h3>Sudoku</h3>
+
+<div class="sudoku-container">
+    @if (SudokuBoard?.board == null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <table class="sudoku-grid">
+            @for (int r = 0; r < 9; r++)
+            {
+                <tr>
+                    @for (int c = 0; c < 9; c++)
+                    {
+                        var row = r;
+                        var col = c;
+
+                        var cell = SudokuBoard.board[row, col];
+                        bool isSelected = SelectedRow == row && SelectedCol == col;
+
+                        <td class="@GetCellCss(row, col, isSelected)"
+                            @onclick="() => SelectCell(row, col)">
+                            @if (cell.value != 0)
+                            {
+                                <span>@cell.value</span>
+                            }
+                            else
+                            {
+                                <span class="placeholder">.</span>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </table>
+    }
+</div>
+
+<div class="controls">
+    <button @onclick="NewGame">New Game</button>
+    <button @onclick="Solve">Solve</button>
+</div>
+
+@if (SelectedRow != -1)
+{
+    <div class="number-pad">
+        @for (int n = 1; n <= 9; n++)
+        {
+            var num = n;
+            <button @onclick="() => EnterValue(num)">@n</button>
+        }
+        <button class="clear-btn" @onclick="() => ClearCell()">Clear</button>
+    </div>
+}
+
+
+@code {
+
+
+
+
+
+
+
+    private Board SudokuBoard = new();
+    private PuzzleGenerator Generator = new();
+    private PuzzleSolver Solver = new();
+
+    private int SelectedRow = -1;
+    private int SelectedCol = -1;
+
+    protected override void OnInitialized()
+    {
+        NewGame();
+    }
+
+    private void NewGame()
+    {
+        SudokuBoard = Generator.GenerateNewPuzzle(DifficultyLevel.Easy);
+        SelectedRow = -1;
+        SelectedCol = -1;
+    }
+
+    private void Solve()
+    {
+        Solver.Solved(SudokuBoard);
+    }
+
+    private void SelectCell(int r, int c)
+    {
+
+        if (SudokuBoard?.board == null)
+            return;
+
+        if (SudokuBoard.board[r, c].given)
+            return;
+
+        SelectedRow = r;
+        SelectedCol = c;
+
+        StateHasChanged();
+    }
+
+    private void EnterValue(int n)
+    {
+        if (SelectedRow == -1)
+            return;
+
+        SudokuBoard.board[SelectedRow, SelectedCol].value = n;
+
+        if (!SudokuBoard.ValidRow(SelectedRow) ||
+        !SudokuBoard.ValidCol(SelectedCol) ||
+        !SudokuBoard.ValidBox(SelectedRow / 3, SelectedCol / 3))
+        {
+            SudokuBoard.board[SelectedRow, SelectedCol].value = 0;
+            return;
+        }
+    }
+
+    private void ClearCell()
+    {
+        if (SelectedRow == -1)
+            return;
+
+        SudokuBoard.board[SelectedRow, SelectedCol].value = 0;
+    }
+
+    private string GetCellCss(int r, int c, bool isSelected)
+    {
+        if (r < 0 || r > 8 || c < 0 || c > 8)
+        {
+            return "";
+        }
+
+        var classes = new List<string>();
+
+        if (SudokuBoard.board[r, c].given)
+            classes.Add("given");
+
+        if (isSelected)
+            classes.Add("selected");
+
+        if (r % 3 == 0)
+            classes.Add("top-border");
+
+        if (c % 3 == 0)
+            classes.Add("left-border");
+
+        return string.Join(" ", classes);
+    }
+}
