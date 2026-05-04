@@ -6,17 +6,26 @@ using System.Threading.Tasks;
 
 namespace Sudoku.Core
 {
+    // DifficultyLevel holds the three levels of difficulty, each with different numbers of given values/ clues on the generated board.
     public enum DifficultyLevel
     {
         Easy,
         Medium,
         Hard
     }
+
+    // PuzzleGenerator generates a solved puzzle by validating every game rule and using a backtracking
+    // algorithm to ensure a unique puzzle every time.
     public class PuzzleGenerator
     {
         private readonly PuzzleSolver solver = new PuzzleSolver();
         Random rand = new Random();
 
+        // I originally wanted the user to be able to choose the difficulty level with a different number of given clues,
+        // but I ended up hardcoding the easy mode for testing purposes. I still might go back and add the ability to choose the difficulty level,
+        // which is why I left the code in GenerateNewPuzzle().
+
+        // GenerateNewPuzzle() calls other methods to generate a fully solved puzzle and remove numbers, then returns a solvable board.
         public Board GenerateNewPuzzle(DifficultyLevel level)
         {
             int givenNums = level switch
@@ -31,6 +40,9 @@ namespace Sudoku.Core
             RemoveValues(board, givenNums);
             return board;
         }
+
+        // GenerateSolvedPuzzle() generates random cell coordinates and a random value. It validates the board rules and places the random
+        // value in the cell, then returns a solved puzzle.
         private Board GenerateSolvedPuzzle()
         {
             var board = new Board();
@@ -66,6 +78,8 @@ namespace Sudoku.Core
             return board;
         }
 
+        // RemoveValues takes a fully solved generated board and removes numbers from the board until there is only a specified number 
+        // of given clues. It calls PuzzleSolver.Solutions() to ensure that each removed number still only leaves one solution for the board.
         private void RemoveValues(Board board, int numGiven)
         {
             var boxPositions = Enumerable.Range(0, 81).ToList();
@@ -109,6 +123,7 @@ namespace Sudoku.Core
             }
         }
 
+        // Shuffle() uses a shuffling algorithm to ensure extra randomness with removing numbers.
         public void Shuffle (List<int> list)
         {
             for (int i = list.Count - 1; i > 0; i--)

@@ -2,8 +2,9 @@
 @rendermode InteractiveServer
 @using Sudoku.Core;
 
-
 <h3>Sudoku</h3>
+
+@* This component creates the actual 9x9 sudoku grid on the page. *@
 
 <div class="sudoku-container">
     @if (SudokuBoard?.board == null)
@@ -42,10 +43,18 @@
     }
 </div>
 
+@* Displays the stopwatch on the screen. *@
+
+<p>Time: @TimeSpan.FromSeconds(elapsedSeconds).ToString(@"mm\:ss")</p>
+
+@* Buttons to generate a new puzzle and fill in the current puzzle. *@
+
 <div class="controls">
     <button @onclick="NewGame">New Game</button>
     <button @onclick="Solve">Solve</button>
 </div>
+
+@* Creates the number pad so users can enter in the number. *@
 
 @if (SelectedRow != -1)
 {
@@ -59,14 +68,21 @@
     </div>
 }
 
+@* This creates the leaderboard at the bottom of the page if the user completes the game. *@
+
+@if (ShowLeaderboard)
+{
+    <h3>Leaderboard</h3>
+    <ul>
+        @foreach (var score in leaderboard)
+        {
+            <li>@score</li>
+        }
+    </ul>
+}
+
 
 @code {
-
-
-
-
-
-
 
     private Board SudokuBoard = new();
     private PuzzleGenerator Generator = new();
@@ -75,22 +91,62 @@
     private int SelectedRow = -1;
     private int SelectedCol = -1;
 
+    private System.Timers.Timer? gameTimer;
+    private int elapsedSeconds = 0;
+    private bool gameRunning = false;
+    private List<string> leaderboard = new();
+    private bool ShowLeaderboard = false;
+
+    // Had to override OnInitialized() so a new game would automatically pop up.
+
     protected override void OnInitialized()
     {
         NewGame();
     }
+
+    // NewGame() generates a new puzzle with a hardcoded difficulty level of easy for testing purposes. It also starts the timer.
 
     private void NewGame()
     {
         SudokuBoard = Generator.GenerateNewPuzzle(DifficultyLevel.Easy);
         SelectedRow = -1;
         SelectedCol = -1;
+
+        StartTimer();
     }
+
+    // StartTimer() starts the timer for the game and updates the elapsed seconds.
+
+    private void StartTimer()
+    {
+        elapsedSeconds = 0;
+        gameRunning = true;
+
+        gameTimer = new System.Timers.Timer(1000);
+        gameTimer.Elapsed += (s, e) =>
+        {
+            elapsedSeconds++;
+            InvokeAsync(StateHasChanged);
+        };
+        gameTimer.Start();
+    }
+
+    // StopTimer() stops the timer and ends the game.
+
+    private void StopTimer()
+    {
+        gameRunning = false;
+        gameTimer?.Stop();
+    }
+
+    // Solve() calls PuzzleSolver.Solved() and completes the board.
 
     private void Solve()
     {
         Solver.Solved(SudokuBoard);
     }
+
+    // SelectCell() updates SelectedRow and SelectedCol to the cell the user clicks. If the cell is a given clue, it returns and doesn't update.
 
     private void SelectCell(int r, int c)
     {
@@ -107,9 +163,15 @@
         StateHasChanged();
     }
 
+    // EnterValue() takes in a number from the number pad and validates it with the game logic. It also checks for game completeness and 
+    // will stop the timer and call the methods for updating the leaderboard.
+
     private void EnterValue(int n)
     {
-        if (SelectedRow == -1)
+        if (SelectedRow == -1 || SelectedCol == -1)
+            return;
+
+        if (SudokuBoard.board[SelectedRow, SelectedCol].given)
             return;
 
         SudokuBoard.board[SelectedRow, SelectedCol].value = n;
@@ -121,7 +183,18 @@
             SudokuBoard.board[SelectedRow, SelectedCol].value = 0;
             return;
         }
+
+        if (SudokuBoard.Complete())
+        {
+            StopTimer();
+            SaveScore(elapsedSeconds);
+            Leaderboard();
+            ShowLeaderboard = true;
+
+        }
     }
+
+    // ClearCell() resets a cell's value to zero.
 
     private void ClearCell()
     {
@@ -130,6 +203,8 @@
 
         SudokuBoard.board[SelectedRow, SelectedCol].value = 0;
     }
+
+    // GetCellCss() formats the grid and values.
 
     private string GetCellCss(int r, int c, bool isSelected)
     {
@@ -153,5 +228,27 @@
             classes.Add("left-border");
 
         return string.Join(" ", classes);
+    }
+
+    // SaveScore() adds the DateTime and the number of elapsed seconds to the leaderboard.txt file. Looking back, I realize 
+    // this isn't really a leaderboard, more so just a list of completion dates and seconds. 
+
+    private void SaveScore(int seconds)
+    {
+        string path = "leaderboard.txt";
+        string score = $"{DateTime.Now}: {seconds} seconds";
+
+        File.AppendAllLines(path, new[] { score });
+    }
+
+    // Leaderboard() updates the leaderboard list to display on the page.
+
+    private void Leaderboard()
+    {
+        string path = "leaderboard.txt";
+        if (File.Exists(path))
+        {
+            leaderboard = File.ReadAllLines(path).ToList();
+        }
     }
 }
